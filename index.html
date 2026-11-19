@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>BRIKET PRESS // MK-I Control Console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BRIKET PRESS // Control Console</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -16,6 +16,7 @@
       <header class="chassis-header">
         <div class="plate-id">
           <h1>Panel Kendali Otomasi</h1>
+          <span class="sub-brand">Mesin Cetak Arang Briket</span>
         </div>
 
         <div class="header-telemetry">
@@ -33,6 +34,7 @@
       </div>
 
       <div class="chassis-body">
+        <!-- Left: Recessed OLED Instrument Screen -->
         <div class="screen-bezel">
           <div id="oledScreen" class="oled-display stopped">
             <div class="oled-glass" aria-hidden="true"></div>
@@ -79,9 +81,10 @@
           </div>
         </div>
 
+        <!-- Right: Physical Tactile Switch Deck -->
         <div class="control-surface">
           <div class="deck-caption">
-            <span class="engraved-label mono">AKTUATOR UTAMA</span>
+            <span class="engraved-label mono">KONTROL UTAMA</span>
             <span class="engraved-sub mono">SUPABASE • ESP32</span>
           </div>
 
@@ -172,4 +175,3 @@
   <script src="app.js"></script>
 </body>
 </html>
-
