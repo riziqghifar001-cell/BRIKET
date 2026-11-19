@@ -1,6 +1,6 @@
 ﻿(() => {
   // =========================================================
-  // KONFIGURASI SUPABASE (ISI SESUAI PROJECT SUPABASE KAMU)
+  // KONFIGURASI SUPABASE
   // =========================================================
   const SUPABASE_URL = 'https://ejfftyrdmcrdkqvxxhxy.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_Zf7P8fH6ULcn2ll90UVMBA_IG7umqkn';
@@ -9,6 +9,7 @@
   const ESP_TIMEOUT_MS = 8500;
 
   let sb = null;
+  let dbConnected = false;
   let isEmergency = false;
   let lastKnownState = 'STOPPED';
   let prevCount = null;
@@ -34,6 +35,22 @@
     $('connText').textContent = text;
   }
 
+  function evaluateEspPresence() {
+    if (!dbConnected) {
+      setConn('offline', 'DB OFFLINE');
+      return;
+    }
+
+    const now = Date.now();
+    const isEspAlive = lastEspHeartbeat > 0 && (now - lastEspHeartbeat) <= ESP_TIMEOUT_MS;
+
+    if (isEspAlive) {
+      setConn('online', 'ESP32 ON');
+    } else {
+      setConn('offline', 'ESP32 OFF');
+    }
+  }
+
   function refreshMetrics() {
     const now = Date.now();
     while (cutTimes.length && now - cutTimes[0] > 60000) {
@@ -41,13 +58,10 @@
     }
     $('rateChip').textContent = `${cutTimes.length} / MNT`;
     $('sessionText').textContent = `+${sessionCount}`;
-
-    if (lastEspHeartbeat > 0 && now - lastEspHeartbeat > ESP_TIMEOUT_MS) {
-      setConn('connecting', 'ESP32 IDLE');
-    }
+    evaluateEspPresence();
   }
 
-  setInterval(refreshMetrics, 2500);
+  setInterval(refreshMetrics, 2000);
 
   function renderCounterDigits(val) {
     const clean = Math.max(0, Math.floor(val));
@@ -68,6 +82,7 @@
   function renderState(data) {
     if (!data) return;
 
+    dbConnected = true;
     const st = String(data.state || 'STOPPED').toUpperCase();
     const count = Number.isFinite(Number(data.count)) ? Number(data.count) : 0;
     const ch1 = Boolean(data.ch1_wiper);
@@ -78,9 +93,6 @@
       const ts = new Date(data.updated_at).getTime();
       if (!Number.isNaN(ts)) {
         lastEspHeartbeat = ts;
-        if (Date.now() - ts <= ESP_TIMEOUT_MS) {
-          setConn('online', 'ONLINE');
-        }
       }
     }
 
@@ -184,12 +196,11 @@
 
   async function sendCommand(cmd) {
     if (!sb) {
-      alert('Koneksi Supabase belum siap. Periksa URL/Key atau koneksi internet.');
+      alert('Koneksi Supabase belum siap. Periksa koneksi internet.');
       return;
     }
     if (isEmergency && cmd !== 'RESET_CNT') return;
 
-    // Umpan balik visual langsung di layar saat tombol disentuh
     if (cmd === 'START') {
       $('statusTitle').textContent = 'Mengirim Perintah START...';
       $('btnStart').classList.add('latched');
@@ -214,6 +225,7 @@
 
     if (error) {
       console.error('Gagal kirim perintah ke Supabase:', error.message);
+      dbConnected = false;
       setConn('offline', 'ERR CMD');
       $('statusTitle').textContent = 'Gagal Kirim Perintah';
       $('statusDesc').textContent = error.message;
@@ -230,6 +242,7 @@
 
     if (error) {
       console.error('Supabase fetch error:', error.message);
+      dbConnected = false;
       setConn('offline', 'DB ERROR');
       return;
     }
@@ -237,13 +250,12 @@
   }
 
   function initSupabase() {
-    if (SUPABASE_URL.includes('YOUR-PROJECT-ID') || !window.supabase) {
-      setConn('connecting', 'SET KEY');
-      $('statusDesc').textContent = 'Isi SUPABASE_URL dan SUPABASE_ANON_KEY di app.js untuk terhubung ke ESP32.';
+    if (!window.supabase) {
+      setConn('offline', 'SDK ERR');
       return;
     }
 
-    setConn('connecting', 'SYNCING');
+    setConn('connecting', 'CEK ESP32');
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     fetchInitialState();
@@ -262,14 +274,12 @@
         }
       )
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          setConn('online', 'ONLINE');
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          setConn('offline', 'OFFLINE');
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          dbConnected = false;
+          setConn('offline', 'DB OFFLINE');
         }
       });
 
-    // Polling cadangan tiap 3 detik untuk sinkronisasi & cek detak jantung ESP32
     setInterval(fetchInitialState, 3000);
   }
 
@@ -294,5 +304,3 @@
   renderState({ state: 'STOPPED', count: 0, ch1_wiper: false, ch2_ac: false, emergency: false });
   initSupabase();
 })();
-
-
