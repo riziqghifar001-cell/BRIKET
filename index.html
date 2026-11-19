@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>BRIKET PRESS // MK-I Control Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <main class="viewport">
+    <section class="chassis" aria-label="Panel Kendali Mesin Cetak Briket">
+      <header class="chassis-header">
+        <div class="plate-id">
+          <span class="serial-tag mono">UNIT // BRIKET-PRESS MK-I</span>
+          <h1>Panel Kendali Otomasi</h1>
+        </div>
+
+        <div class="header-telemetry">
+          <div class="clock-readout mono" id="liveClock">00:00:00</div>
+          <div id="connPill" class="link-badge offline">
+            <span class="link-led"></span>
+            <span id="connText" class="mono">OFFLINE</span>
+          </div>
+        </div>
+      </header>
+
+      <div id="emergBanner" class="emerg-strip hidden" role="alert">
+        <span class="emerg-badge mono">E-STOP</span>
+        <p><strong>DARURAT TERKUNCI</strong> — Putar &amp; tarik tombol push-lock fisik pada mesin untuk melanjutkan.</p>
+      </div>
+
+      <div class="chassis-body">
+        <div class="screen-bezel">
+          <div id="oledScreen" class="oled-display stopped">
+            <div class="oled-glass" aria-hidden="true"></div>
+
+            <div class="oled-top">
+              <div class="state-indicator">
+                <span id="statusDot" class="phosphor-dot stopped"></span>
+                <span id="modeTag" class="state-label mono">BERHENTI</span>
+              </div>
+              <span id="rateChip" class="rate-readout mono">0 / MNT</span>
+            </div>
+
+            <div id="counterFrame" class="counter-readout">
+              <div class="digits-wrap mono" aria-live="polite">
+                <span id="ghostDigits" class="digits-ghost">000</span><span id="countNum" class="digits-active">0</span>
+              </div>
+              <div class="counter-caption">
+                <span class="unit-label mono">BRIKET TERCETAK</span>
+                <span class="session-readout mono">SESI <strong id="sessionText">+0</strong></span>
+              </div>
+            </div>
+
+            <div class="oled-footer">
+              <div class="status-line">
+                <strong id="statusTitle">Mesin Berhenti</strong>
+                <span id="syncLabel" class="sync-stamp mono">--:--:--</span>
+              </div>
+              <p id="statusDesc" class="status-sub">Tekan START untuk menjalankan motor cetak dan pemotongan otomatis.</p>
+
+              <div class="cycle-strip mono">
+                <span id="stepExtrude" class="cycle-node">01 MOTOR AC</span>
+                <span class="cycle-sep">›</span>
+                <span id="stepDetect" class="cycle-node">02 SENSOR</span>
+                <span class="cycle-sep">›</span>
+                <span id="stepCut" class="cycle-node">03 WIPER 3S</span>
+              </div>
+
+              <div id="cutProgressWrap" class="cut-meter hidden">
+                <div class="cut-track">
+                  <div id="cutProgressBar" class="cut-bar"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-surface">
+          <div class="deck-caption">
+            <span class="engraved-label mono">AKTUATOR UTAMA</span>
+            <span class="engraved-sub mono">SUPABASE • ESP32</span>
+          </div>
+
+          <div class="switch-row">
+            <div class="switch-col">
+              <div class="pilot-assembly">
+                <span id="ledStart" class="pilot-lamp green"></span>
+                <span class="engraved-tag mono">START</span>
+              </div>
+
+              <button id="btnStart" class="hw-button start" type="button" aria-label="Start Mesin">
+                <span class="hw-collar">
+                  <span class="hw-boot">
+                    <span class="hw-plunger">
+                      <span class="iec-i" aria-hidden="true"></span>
+                      <span class="cap-text mono">RUN</span>
+                    </span>
+                  </span>
+                </span>
+              </button>
+            </div>
+
+            <div class="switch-col">
+              <div class="pilot-assembly">
+                <span id="ledStop" class="pilot-lamp red active"></span>
+                <span class="engraved-tag mono">STOP</span>
+              </div>
+
+              <button id="btnStop" class="hw-button stop" type="button" aria-label="Stop Mesin">
+                <span class="hw-collar">
+                  <span class="hw-boot">
+                    <span class="hw-plunger">
+                      <span class="iec-o" aria-hidden="true"></span>
+                      <span class="cap-text mono">OFF</span>
+                    </span>
+                  </span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div class="reset-bay">
+            <div class="reset-meta">
+              <span class="engraved-label mono">COUNTER RESET</span>
+              <span class="reset-note">Kembalikan hitungan ke 0000</span>
+            </div>
+            <div class="shroud-guard">
+              <button id="btnReset" class="hw-reset" type="button" title="Reset jumlah produksi menjadi 0">
+                <span class="reset-dot"></span>
+                <span class="mono">RESET</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="annunciator-bar">
+        <div id="cardAc" class="ann-cell">
+          <span class="ann-led"></span>
+          <div class="ann-info">
+            <span class="ann-name">Motor AC</span>
+            <span class="ann-port mono">CH-2 • JEDA 3D</span>
+          </div>
+          <span id="acBadge" class="ann-state mono off">MATI</span>
+        </div>
+
+        <div id="cardWiper" class="ann-cell">
+          <span class="ann-led"></span>
+          <div class="ann-info">
+            <span class="ann-name">Wiper Potong</span>
+            <span class="ann-port mono">CH-1 • 1X PUTAR</span>
+          </div>
+          <span id="wiperBadge" class="ann-state mono off">SIAP</span>
+        </div>
+
+        <div id="cardEmerg" class="ann-cell">
+          <span class="ann-led"></span>
+          <div class="ann-info">
+            <span class="ann-name">Darurat</span>
+            <span class="ann-port mono">PUSH-LOCK</span>
+          </div>
+          <span id="emergBadge" class="ann-state mono ok">AMAN</span>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
