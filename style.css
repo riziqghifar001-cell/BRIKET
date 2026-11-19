@@ -920,3 +920,22 @@ body {
     display: none;
   }
 }
+
+
+/* Mobile Touch & Pointer Fix */
+button, .hw-button, .hw-reset {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  position: relative;
+  z-index: 5;
+}
+
+.hw-button *, .hw-reset * {
+  pointer-events: none;
+}
+
+.oled-glass {
+  pointer-events: none !important;
+}

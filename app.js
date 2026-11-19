@@ -183,8 +183,20 @@
   }
 
   async function sendCommand(cmd) {
-    if (!sb) return;
+    if (!sb) {
+      alert('Koneksi Supabase belum siap. Periksa URL/Key atau koneksi internet.');
+      return;
+    }
     if (isEmergency && cmd !== 'RESET_CNT') return;
+
+    // Umpan balik visual langsung di layar saat tombol disentuh
+    if (cmd === 'START') {
+      $('statusTitle').textContent = 'Mengirim Perintah START...';
+      $('btnStart').classList.add('latched');
+    } else if (cmd === 'STOP') {
+      $('statusTitle').textContent = 'Mengirim Perintah STOP...';
+      $('btnStop').classList.add('latched');
+    }
 
     const patch = { cmd };
     if (cmd === 'RESET_CNT') {
@@ -203,6 +215,8 @@
     if (error) {
       console.error('Gagal kirim perintah ke Supabase:', error.message);
       setConn('offline', 'ERR CMD');
+      $('statusTitle').textContent = 'Gagal Kirim Perintah';
+      $('statusDesc').textContent = error.message;
     }
   }
 
@@ -280,4 +294,5 @@
   renderState({ state: 'STOPPED', count: 0, ch1_wiper: false, ch2_ac: false, emergency: false });
   initSupabase();
 })();
+
 
