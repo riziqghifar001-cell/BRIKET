@@ -6,7 +6,7 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_Zf7P8fH6ULcn2ll90UVMBA_IG7umqkn';
   const TABLE_NAME = 'mesin_briket';
   const ROW_ID = 1;
-  const ESP_TIMEOUT_MS = 8500;
+  const ESP_TIMEOUT_MS = 9000;
 
   let sb = null;
   let dbConnected = false;
@@ -89,11 +89,10 @@
     const ch2 = Boolean(data.ch2_ac);
     const emerg = Boolean(data.emergency) || st === 'EMERGENCY';
 
-    lastEspHeartbeat = Date.now();
     if (data.updated_at) {
       const ts = new Date(data.updated_at).getTime();
       if (!Number.isNaN(ts)) {
-        lastEspHeartbeat = Math.max(Date.now(), ts);
+        lastEspHeartbeat = ts;
       }
     }
 
@@ -312,5 +311,6 @@
   renderState({ state: 'STOPPED', count: 0, ch1_wiper: false, ch2_ac: false, emergency: false });
   initSupabase();
 })();
+
 
 
