@@ -6,7 +6,7 @@
   const SUPABASE_ANON_KEY = 'sb_publishable_Zf7P8fH6ULcn2ll90UVMBA_IG7umqkn';
   const TABLE_NAME = 'mesin_briket';
   const ROW_ID = 1;
-  const ESP_TIMEOUT_MS = 9000;
+  const ESP_TIMEOUT_MS = 15000;
 
   let sb = null;
   let dbConnected = false;
@@ -42,7 +42,9 @@
     }
 
     const now = Date.now();
-    const isEspAlive = lastEspHeartbeat > 0 && (now - lastEspHeartbeat) <= ESP_TIMEOUT_MS;
+    const diff = lastEspHeartbeat > 0 ? Math.abs(now - lastEspHeartbeat) : Infinity;
+    const isActivelyReporting = (lastKnownState === 'RUNNING' || lastKnownState === 'CUTTING' || lastKnownState === 'EMERGENCY') && diff <= 30000;
+    const isEspAlive = (lastEspHeartbeat > 0 && diff <= ESP_TIMEOUT_MS) || isActivelyReporting;
 
     if (isEspAlive) {
       setConn('online', 'ESP32 ON');
@@ -297,9 +299,8 @@
   });
 
   $('btnStop').addEventListener('click', () => {
-    if (lastKnownState !== 'STOPPED') {
-      sendCommand('STOP');
-    }
+    $('btnStart').classList.remove('latched');
+    sendCommand('STOP');
   });
 
   $('btnReset').addEventListener('click', () => {
@@ -311,6 +312,7 @@
   renderState({ state: 'STOPPED', count: 0, ch1_wiper: false, ch2_ac: false, emergency: false });
   initSupabase();
 })();
+
 
 
 
