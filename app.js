@@ -89,10 +89,11 @@
     const ch2 = Boolean(data.ch2_ac);
     const emerg = Boolean(data.emergency) || st === 'EMERGENCY';
 
+    lastEspHeartbeat = Date.now();
     if (data.updated_at) {
       const ts = new Date(data.updated_at).getTime();
       if (!Number.isNaN(ts)) {
-        lastEspHeartbeat = ts;
+        lastEspHeartbeat = Math.max(Date.now(), ts);
       }
     }
 
@@ -311,4 +312,5 @@
   renderState({ state: 'STOPPED', count: 0, ch1_wiper: false, ch2_ac: false, emergency: false });
   initSupabase();
 })();
+
 
