@@ -238,7 +238,7 @@
       .from(TABLE_NAME)
       .select('*')
       .eq('id', ROW_ID)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Supabase fetch error:', error.message);
@@ -246,6 +246,13 @@
       setConn('offline', 'DB ERROR');
       return;
     }
+
+    if (!data) {
+      dbConnected = true;
+      setConn('offline', 'NO ROW 1');
+      return;
+    }
+
     renderState(data);
   }
 
@@ -304,3 +311,4 @@
   renderState({ state: 'STOPPED', count: 0, ch1_wiper: false, ch2_ac: false, emergency: false });
   initSupabase();
 })();
+
